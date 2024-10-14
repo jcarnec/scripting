@@ -61,7 +61,9 @@ get_application_names() {
 # Function to retrieve the launch command for a given tmux session
 get_tmux_launch_command() {
     local session_name="$1"
+    notify-send $session_name
     for session in "${tmux_sessions[@]}"; do
+        notify-send $session
         IFS=";" read -r name launch_cmd <<< "$session"
         if [ "$name" == "$session_name" ]; then
             echo "$launch_cmd"
@@ -80,6 +82,8 @@ handle_tmux_session() {
         # Retrieve the launch command for the session
         local launch_cmd
         launch_cmd=$(get_tmux_launch_command "$session")
+        notify-send $session
+        notify-send $launch_cmd
 
         if [ -n "$launch_cmd" ]; then
             # Execute the launch command
@@ -87,7 +91,7 @@ handle_tmux_session() {
             # Wait briefly to allow the session to start
             sleep 0.5
         else
-            notify-send "No launch command found for tmux session: $session"
+            notify-send "No launch command found for tmux session: $session, $launch_cmd"
             return 1
         fi
     fi
@@ -197,12 +201,12 @@ select_and_launch() {
     local index=0
 
     # Get tmux sessions
-    tmux_sessions=$(get_all_tmux_sessions)
+    tmux_sessions_=$(get_all_tmux_sessions)
     while IFS= read -r session; do
         menu_entries[$index]="TMUX: $session"
         menu_actions[$index]="tmux_session:$session"
         ((index++))
-    done <<< "$tmux_sessions"
+    done <<< "$tmux_sessions_"
 
     # Get applications
     app_names=$(get_application_display_names)
