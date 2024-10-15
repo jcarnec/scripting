@@ -10,6 +10,7 @@
 # Format: "SessionName;LaunchCommand"
 tmux_sessions=(
     "ml_session;~/non-work/scripting/session_definition_scripts/tmux_movie_list.sh"
+    "general_session;~/non-work/scripting/session_definition_scripts/tmux_general_session.sh"
     # Add more sessions here in the format "SessionName;LaunchCommand"
     # Example:
     # "dev_session;/path/to/dev_session_start.sh"
@@ -61,9 +62,7 @@ get_application_names() {
 # Function to retrieve the launch command for a given tmux session
 get_tmux_launch_command() {
     local session_name="$1"
-    notify-send $session_name
     for session in "${tmux_sessions[@]}"; do
-        notify-send $session
         IFS=";" read -r name launch_cmd <<< "$session"
         if [ "$name" == "$session_name" ]; then
             echo "$launch_cmd"
@@ -82,21 +81,19 @@ handle_tmux_session() {
         # Retrieve the launch command for the session
         local launch_cmd
         launch_cmd=$(get_tmux_launch_command "$session")
-        notify-send $session
-        notify-send $launch_cmd
 
         if [ -n "$launch_cmd" ]; then
             # Execute the launch command
             eval "$launch_cmd" &
             # Wait briefly to allow the session to start
-            sleep 0.5
+            sleep 2
         else
             notify-send "No launch command found for tmux session: $session, $launch_cmd"
             return 1
         fi
     fi
 
-    # Check if a gnome-terminal window with the session name exists
+    # # Check if a gnome-terminal window with the session name exists
     local window_id
     window_id=$(xdotool search --name "$session" | head -n 1)
 
@@ -160,7 +157,8 @@ handle_application() {
         if [ -n "$window_id" ]; then
             wmctrl -i -a "$window_id"
         else
-            notify-send "Failed to launch application: $app_display_name"
+            # notify-send "Failed to launch application: $app_display_name"
+            sleep 1
         fi
     fi
 }
@@ -200,26 +198,28 @@ select_and_launch() {
     local menu_actions=()
     local index=0
 
-    # Get tmux sessions
-    tmux_sessions_=$(get_all_tmux_sessions)
-    while IFS= read -r session; do
-        menu_entries[$index]="TMUX: $session"
-        menu_actions[$index]="tmux_session:$session"
-        ((index++))
-    done <<< "$tmux_sessions_"
-
     # Get applications
     app_names=$(get_application_display_names)
     while IFS= read -r app; do
-        menu_entries[$index]="APP: $app"
+        menu_entries[$index]="$index APP: $app"
         menu_actions[$index]="application:$app"
         ((index++))
     done <<< "$app_names"
 
+
+    # Get tmux sessions
+    tmux_sessions_=$(get_all_tmux_sessions)
+    while IFS= read -r session; do
+        menu_entries[$index]="$index TMUX: $session"
+        menu_actions[$index]="tmux_session:$session"
+        ((index++))
+    done <<< "$tmux_sessions_"
+
+
     # Get active windows
     get_active_windows
     for ((i=0; i<${#window_menu_entries[@]}; i++)); do
-        menu_entries[$index]="${window_menu_entries[$i]}"
+        menu_entries[$index]="$index ${window_menu_entries[$i]}"
         menu_actions[$index]="window:${window_ids[$i]}"
         ((index++))
     done
