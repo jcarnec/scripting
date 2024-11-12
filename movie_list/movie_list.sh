@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ml_start_backend() {
-	sudo docker start mongo-3.4
+	sudo docker startmongo-3.4
 	cd ~/non-work/movie-list/backend
 	npm run dev
 }

@@ -197,35 +197,39 @@ select_and_launch() {
     local menu_entries=()
     local menu_actions=()
     local index=0
+    local index_string=1
 
     # Get applications
     app_names=$(get_application_display_names)
     while IFS= read -r app; do
-        menu_entries[$index]="$index APP: $app"
+        menu_entries[$index]="$index_string APP: $app"
         menu_actions[$index]="application:$app"
         ((index++))
+        ((index_string++))
     done <<< "$app_names"
 
 
     # Get tmux sessions
     tmux_sessions_=$(get_all_tmux_sessions)
     while IFS= read -r session; do
-        menu_entries[$index]="$index TMUX: $session"
+        menu_entries[$index]="$index_string TMUX: $session"
         menu_actions[$index]="tmux_session:$session"
         ((index++))
+        ((index_string++))
     done <<< "$tmux_sessions_"
 
 
     # Get active windows
     get_active_windows
     for ((i=0; i<${#window_menu_entries[@]}; i++)); do
-        menu_entries[$index]="$index ${window_menu_entries[$i]}"
+        menu_entries[$index]="$index_string ${window_menu_entries[$i]}"
         menu_actions[$index]="window:${window_ids[$i]}"
         ((index++))
+        ((index_string++))
     done
 
     # Present the menu
-    selected=$(printf "%s\n" "${menu_entries[@]}" | rofi -dmenu -p "Select tmux session, Application, or Window")
+    selected=$(printf "%s\n" "${menu_entries[@]}" | rofi -dmenu -autoselect -p "Select tmux session, Application, or Window")
 
     if [ -z "$selected" ]; then
         exit 0
